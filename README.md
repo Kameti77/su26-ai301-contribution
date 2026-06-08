@@ -1,15 +1,15 @@
-# Contribution [#]: [Issue Title]
+# Contribution [#]: Locales that doesn't fit the patterns of date and time have odd results
 
-**Contribution Number:** [1 / 2 / 3]  
-**Student:** [Your Name]  
-**Issue:** [GitHub issue link]  
-**Status:** [Phase I / Phase II / Phase III / Phase IV] [In Progress / Complete]
+**Contribution Number:** 1  
+**Student:** Kameti Kumbi
+**Issue:** [[GitHub issue link](https://github.com/stoatchat/for-web/issues/629)]  
+**Status:** [Phase I] [Complete]
 
 ---
 
 ## Why I Chose This Issue
 
-[1-2 paragraphs explaining why this issue interests you, how it matches your skills/learning goals, what you hope to learn]
+I chose this issue because it seemed like a good match for my current skills and interests. Since I have experience with JavaScript and frontend development, I felt comfortable working on a bug that affects the user interface and user experience. I was also interested in learning more about how applications handle different languages, regions, and date/time formats. The issue is well documented, labeled as a good first issue, and has a clear explanation of the problem, which makes it a great opportunity to contribute to an open-source project while continuing to build my skills.
 
 ---
 
