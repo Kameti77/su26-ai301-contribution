@@ -155,6 +155,7 @@ Then open http://localhost:5173
 
 - **Branch link:** https://github.com/Kameti77/for-web/tree/fix-issue-629
 - **Screenshots:** Confirmed bug visible in Language settings with Deutsch selected — date format shows only slash-based presets, no locale-native dot format, no Automatic option
+ ![Reproduction Evidence](reproduction_evidence.png)
 - **My findings:** The bug is consistently reproducible. Switching to any locale that uses a non-standard separator (dots, periods) or a non-standard time format exposes the missing "Automatic" option. The three hardcoded date presets only cover slash and dash separators, leaving out a large number of locales.
 
 ---
