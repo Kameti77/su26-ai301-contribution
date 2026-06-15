@@ -3,7 +3,7 @@
 **Contribution Number:** 1  
 **Student:** Kameti Kumbi
 **Issue:** [[GitHub issue link](https://github.com/stoatchat/for-web/issues/629)]  
-**Status:** [Phase I] [Complete]
+**Status:** [Phase II] [Complete]
 
 ---
 
@@ -37,19 +37,125 @@ I chose this issue because it seemed like a good match for my current skills and
 
 ### Environment Setup
 
-[Notes on setting up your local development environment - challenges you faced, how you solved them]
+**OS:** Windows 11
+
+**Tools Required:**
+- Git
+- mise-en-place (task runner)
+- Node.js (v24.16.0) — installed via `winget install OpenJS.NodeJS.LTS`
+- pnpm (v11.3.0) — installed via `npm install -g pnpm`
+
+**Challenges & Solutions:**
+
+**Challenge 1: `node` not recognized in pnpm postinstall scripts**
+
+After installing mise and running `mise install:frozen`, pnpm's postinstall scripts (for esbuild) kept failing with `'node' is not recognized as an internal or external command`. This happened because pnpm spawns child `cmd.exe` processes that couldn't find mise's managed Node binary.
+
+*What was tried (didn't work):*
+- Adding mise shims to user PATH via PowerShell
+- Running `mise exec -- pnpm install`
+- Running `mise activate powershell`
+
+*What finally worked:*
+- Installing Node.js directly via `winget install OpenJS.NodeJS.LTS`
+- Adding `C:\Program Files\nodejs` to the **system** PATH via System Properties → Environment Variables → System variables
+- Running pnpm directly using its full path from **cmd.exe** (not PowerShell):
+
+```cmd
+C:\Users\<username>\AppData\Roaming\npm\pnpm install --frozen-lockfile
+```
+
+**Challenge 2: `mise build:deps` also failed with the same node error**
+
+The `mise build:deps` task also spawned child processes that couldn't find node. Instead of using mise tasks, each dependency was built manually:
+
+```cmd
+C:\Users\<username>\AppData\Roaming\npm\pnpm --filter stoat.js run build
+C:\Users\<username>\AppData\Roaming\npm\pnpm --filter solid-livekit-components run build
+C:\Users\<username>\AppData\Roaming\npm\pnpm --filter @lingui-solid/babel-plugin-lingui-macro run build
+C:\Users\<username>\AppData\Roaming\npm\pnpm --filter @lingui-solid/babel-plugin-extract-messages run build
+```
+
+**Challenge 3: Blank page — missing i18n catalogs**
+
+The app loaded but showed a blank page with the error:
+```
+does not provide an export named 'messages'
+```
+The lingui catalogs needed to be compiled in TypeScript format specifically:
+
+```cmd
+C:\Users\<username>\AppData\Roaming\npm\pnpm --filter client exec lingui compile --typescript
+```
+
+Then the old `messages.js` file had to be deleted since the app was still loading the stale CommonJS version:
+
+```cmd
+del packages\client\components\i18n\catalogs\en\messages.js
+```
+
+**Challenge 4: Vite cache serving stale files**
+
+Even after recompiling, Vite kept serving the old cached file. Fix:
+
+```powershell
+Remove-Item -Recurse -Force packages\client\node_modules\.vite
+```
+
+**Challenge 5: Missing brand assets**
+
+The app showed SVG import errors for the Stoat wordmark and icons. Fixed by pulling brand assets:
+
+```cmd
+mise assets
+```
+
+**Challenge 6: Dev server command**
+
+The README says `mise dev` but that also fails on Windows due to the node PATH issue. The working command to start the dev server is:
+
+```cmd
+cd packages\client
+npx vite
+```
+
+**Final working startup sequence (run from project root):**
+
+```cmd
+C:\Users\<username>\AppData\Roaming\npm\pnpm install --frozen-lockfile
+C:\Users\<username>\AppData\Roaming\npm\pnpm --filter client exec lingui compile --typescript
+mise assets
+cd packages\client
+npx vite
+```
+
+Then open http://localhost:5173
+
+---
 
 ### Steps to Reproduce
 
-1. [Step 1]
-2. [Step 2]
-3. [Observed result]
+1. Log into the app at http://localhost:5173
+2. Click the **gear/settings icon** to open User Settings
+3. Navigate to the **Language** section
+4. Change the language to **Deutsch (German)**
+5. Click on the **Date format** dropdown
+6. Observe: only three hardcoded options are available — `Traditional (DD/MM/YYYY)`, `American (MM/DD/YYYY)`, and `ISO Standard (YYYY-MM-DD)`. German's native format `DD.MM.YYYY` (with dots) is not available, and there is no "Automatic" or "Default" option to use the locale's native format.
+7. Click on the **Time format** dropdown
+8. Observe: only "24 hours" and "12 hours" are available — no "Automatic" option to revert to the locale's default format
+9. Switch language back to **English** — the date format does not reset, confirming there is no way to return to locale-default without manually picking a preset
+
+**Expected behavior:** An "Automatic" option should exist for both date and time format that uses the selected locale's native format by default.
+
+**Actual behavior:** Only hardcoded presets are available. Many locales (German, Spanish, Bulgarian, Indonesian, Japanese, etc.) use formats that don't match any of the three presets, and once a format is manually selected there is no way to revert to the locale default.
+
+---
 
 ### Reproduction Evidence
 
-- **Commit showing reproduction:** [Link to commit in your fork]
-- **Screenshots/logs:** [If applicable]
-- **My findings:** [What you discovered during reproduction]
+- **Branch link:** https://github.com/Kameti77/for-web/tree/fix-issue-629
+- **Screenshots:** Confirmed bug visible in Language settings with Deutsch selected — date format shows only slash-based presets, no locale-native dot format, no Automatic option
+- **My findings:** The bug is consistently reproducible. Switching to any locale that uses a non-standard separator (dots, periods) or a non-standard time format exposes the missing "Automatic" option. The three hardcoded date presets only cover slash and dash separators, leaving out a large number of locales.
 
 ---
 
@@ -67,20 +173,58 @@ I chose this issue because it seemed like a good match for my current skills and
 
 Using UMPIRE framework (adapted):
 
-**Understand:** [Restate the problem]
+### Understand
 
-**Match:** [What similar patterns/solutions exist in the codebase?]
+The date/time format only allows hard-coded presets; however, many locale formats don’t match any of them. For example: e.g. German uses `DD.MM.YYYY`, Spanish uses `H:mm`. There's no "Automatic" option that uses the locale's native days format. When users switch languages, the picker still shows the old value (or no match), and there's no way to revert to the locale's default.
 
-**Plan:** [Step-by-step implementation plan]
-1. [Modify file X to do Y]
-2. [Add function Z]
-3. [Update tests]
+### Match (similar patterns in codebase)
 
-**Implement:** [Link to your branch/commits as you work]
+- `dayjs.tsx:81` — `L: options.dateFormat ?? useLocale.formats.L` already falls back to the locale's native format when no override is set. This is exactly the "automatic" behavior. It is important to expose `undefined`/`null` as the "no override" state.
+- `Locale.ts:65-72` — `clean()` stores `options.dateFormat`/`options.timeFormat` only when they are strings; `undefined` means "use locale default". This already supports clearing the override.
 
-**Review:** [Self-review checklist - does it follow the project's contribution guidelines?]
+### Root Cause
 
-**Evaluate:** [How will you verify it works?]
+In `Language.tsx:118`, the `value` prop of `CategoryButton.Select` is set to `timeLocale()[1].formats.L` (the resolved format, after the locale override is applied). So once a user picks a format, the picker always matches one of the hard-coded options. There is:
+
+1. No "Automatic" option in the `options` map.
+2. No way to set `dateFormat`/`timeFormat` back to `undefined` to clear the override.
+3. No `clearDateFormat`/`clearTimeFormat` method on `Locale`.
+
+### Plan - high level
+
+1. **Add `clearDateFormat()` and `clearTimeFormat()` to `Locale.ts`** — these delete the stored option and call `updateTimeLocaleOptions({ dateFormat: undefined, timeFormat: undefined })` to fall back to the locale native format.
+2. **Add an "Automatic" option to both pickers in `Language.tsx`** — keyed by a sentinel value (e.g. `"auto"`). When selected, call `locale.clearDateFormat()` / `locale.clearTimeFormat()`.
+3. **Fix the `value` binding** — instead of `timeLocale()[1].formats.L` (which always resolves to the actual format string), use the stored override value from `locale.get().options.dateFormat ?? "auto"`. This makes the picker correctly show "Automatic" when no override is set.
+
+#### Files to Touch
+
+| File | Change |
+| --- | --- |
+| `packages/client/components/state/stores/Locale.ts` | Add `clearDateFormat()` and `clearTimeFormat()` methods |
+| `packages/client/components/app/interface/settings/user/Language.tsx` | Add "Automatic" option to both pickers; fix `value` binding to use stored option not resolved format |
+|  |  |
+
+### Implement
+
+[[Fork Branch Link](https://github.com/Kameti77/for-web/tree/fix-issue-629)]
+
+### Review
+
+According to `GUIDELINES.md`:
+
+- Comment above the new methods (`clearDateFormat`, `clearTimeFormat`)
+- No prop destructuring. Use `splitProps` if adding new Solid props
+- 2-space indentation
+- Commit message convention: check `git log` — the project uses `fix: <description>` style (conventional commits)
+
+### Evaluate
+
+**Manual testing:**
+
+1. Switch to German → date picker should auto-select "Automatic" showing `DD.MM.YYYY`
+2. Switch to Spanish → time picker should auto-select "Automatic" showing `H:mm`
+3. Pick an explicit override → switch language → confirm it **stays** on the explicit override (not reset)
+4. Select "Automatic" explicitly after an override → confirm it reverts to locale default
 
 ---
 
