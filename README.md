@@ -250,9 +250,59 @@ According to `GUIDELINES.md`:
 
 ## Implementation Notes
 
-### Week [X] Progress
+### Week 3 Progress
 
-[What you built this week, challenges faced, decisions made]
+### Implementation Progress
+
+**Status: Tasks 1 and 2 of 3 complete.**
+
+**Task 1 — Store: added `clearDateFormat` and `clearTimeFormat` (complete)**
+
+Added two new methods to `Locale.ts` that allow clearing a saved date or time format override, reverting the app back to the locale's native default. Previously the store only had `setDateFormat` and `setTimeFormat` with no way to undo an override.
+
+- **File modified:** `packages/client/components/state/stores/Locale.ts`
+- **What was added:** `clearDateFormat()` and `clearTimeFormat()` methods that call `this.set("options", "dateFormat", undefined)` and `updateTimeLocaleOptions({ dateFormat: undefined })`
+
+**Task 2 — Fix value binding in pickers (complete)**
+
+Fixed the `value` prop in both `PickDateFormat` and `PickTimeFormat` so the picker correctly reflects the user's stored preference instead of always reading the resolved locale format. Previously, if a user's locale had a non-matching native format, the picker would highlight nothing.
+
+- **File modified:** `packages/client/components/app/interface/settings/user/Language.tsx`
+- **What was changed:** `value={timeLocale()[1].formats.L}` → `value={locale.get().options.dateFormat ?? "DD/MM/YYYY"}` and `value={timeLocale()[1].formats.LT}` → `value={locale.get().options.timeFormat ?? "HH:mm"}`
+
+**Task 3 — Add "Automatic" option to both pickers (in progress)**
+
+Not yet implemented. This is the final task — adding the "Automatic" key to both dropdowns and wiring it up to call `clearDateFormat` / `clearTimeFormat` when selected.
+
+---
+
+### Challenges Faced
+
+**Understanding the data flow** — The hardest part was tracing how the format value flows from the store → dayjs → the UI picker. The `value` prop on the picker reads from `timeLocale()[1].formats.L` which is the *resolved* dayjs locale format, not the *stored* user preference. These are two different things and that distinction is key to understanding both the bug and the fix.
+
+**TypeScript strictness** — The `set()` method on the store needed to accept `undefined` for the clear methods to work. Needed to verify the existing `clean()` function already handles `undefined` gracefully (it does — it only saves a value if `typeof input === "string"`, so passing `undefined` naturally skips saving it).
+
+**AI as a tool, not a crutch** — Used Claude to help trace the codebase and understand unfamiliar patterns (SolidJS reactivity, the AbstractStore pattern). Every suggestion was reviewed and understood before being applied. The goal was to understand *why* each change works, not just copy it.
+
+---
+
+### Testing Strategy
+
+This project has no unit test infrastructure for stores. Testing was done manually:
+
+**Task 1 verification:**
+
+- Ran `npx tsc --noEmit` in `packages/client` to confirm TypeScript compiles cleanly with the new methods
+
+**Task 2 verification:**
+
+- Ran the dev server and navigated to Settings → Language
+- Selected `DD/MM/YYYY` explicitly and confirmed the picker highlighted that option
+- Refreshed the page and confirmed the selection persisted
+
+**Task 3 (planned):**
+
+- Will manually test the full matrix: switching locales, picking Automatic after an override, verifying locale-native formats display correctly for German, Spanish, and Azerbaijani
 
 ### Week [Y] Progress
 
