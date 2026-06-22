@@ -1,4 +1,4 @@
-# Contribution [#]: Locales that doesn't fit the patterns of date and time have odd results
+# Contribution [1]: Locales that doesn't fit the patterns of date and time have odd results
 
 **Contribution Number:** 1  
 **Student:** Kameti Kumbi
