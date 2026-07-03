@@ -329,7 +329,7 @@ The Automatic option uses the locale's native dayjs format tokens (L for date, L
 - [Date]: [Summary of feedback received]
 - [Date]: [How you addressed it]
 
-**Status:** [Awaiting review / Iterating / Approved / Merged]
+**Status:** [Awaiting review]
 
 ---
 
