@@ -3,7 +3,7 @@
 **Contribution Number:** 1  
 **Student:** Kameti Kumbi
 **Issue:** [[GitHub issue link](https://github.com/stoatchat/for-web/issues/629)]  
-**Status:** [Phase III] [In Progress]
+**Status:** [Phase IV] [Awaiting reviews]
 
 ---
 
@@ -318,9 +318,12 @@ This project has no unit test infrastructure for stores. Testing was done manual
 
 ## Pull Request
 
-**PR Link:** [GitHub PR URL when submitted]
+**PR Link:** [(https://github.com/stoatchat/for-web/pull/1323)]
 
 **PR Description:** [Draft or final PR description - much of the content above can be adapted]
+This PR adds an Automatic option to both the date and time format pickers in Language settings. Previously, the only choices were fixed presets (DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD for date and HH:mm, h:mm A for time). Many locales use formats that don't match any of these. For example, German uses DD.MM.YYYY, Spanish uses H:mm, and Indonesian uses HH.mm, so users on those locales had no option that correctly reflected their locale's native format, and there was no way to revert to the locale default once an override had been picked.
+
+The Automatic option uses the locale's native dayjs format tokens (L for date, LT for time), so it always displays the correct format for whatever language is selected. Switching languages updates the Automatic preview immediately. Explicit overrides are preserved across language switches and can be reverted to Automatic at any time.
 
 **Maintainer Feedback:**
 - [Date]: [Summary of feedback received]
